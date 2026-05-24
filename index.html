@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>SentiLyze</title>
+  <link rel="icon" type="image/png" href="./media/icon-SentiLyze.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap"rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <style>
+    * {
+      font-family: "Inter", sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(156, 163, 175, 0.14), transparent 30%),
+        radial-gradient(circle at top right, rgba(107, 114, 128, 0.16), transparent 32%),
+        linear-gradient(135deg, #111827 0%, #1f2937 45%, #0f172a 100%);
+      color: #d1d5db;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .tagline {
+      font-family: "Playfair Display", serif;
+    }
+
+    .glass-card {
+      background: rgba(31, 41, 55, 0.62);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(209, 213, 219, 0.16);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+    }
+
+    .soft-card {
+      background: rgba(17, 24, 39, 0.72);
+      border: 1px solid rgba(209, 213, 219, 0.12);
+      box-shadow: 0 16px 35px rgba(0, 0, 0, 0.22);
+    }
+
+    .about-card {
+      background: rgba(17, 24, 39, 0.74);
+      border: 1px solid rgba(209, 213, 219, 0.13);
+      transition: all 0.25s ease;
+    }
+
+    .about-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(209, 213, 219, 0.25);
+      background: rgba(31, 41, 55, 0.82);
+    }
+
+    .team-card {
+      background: rgba(31, 41, 55, 0.68);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(209, 213, 219, 0.14);
+      transition: all 0.28s ease;
+    }
+
+    .team-card:hover {
+      transform: translateY(-6px);
+      background: rgba(55, 65, 81, 0.82);
+      border-color: rgba(229, 231, 235, 0.26);
+      box-shadow: 0 20px 35px rgba(0, 0, 0, 0.34);
+    }
+
+    .btn-primary {
+      background: linear-gradient(95deg, #4b5563, #6b7280);
+      color: #f3f4f6;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(95deg, #6b7280, #9ca3af);
+      transform: scale(1.02);
+    }
+
+    .btn-secondary {
+      border: 1px solid rgba(209, 213, 219, 0.28);
+      color: #d1d5db;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(209, 213, 219, 0.08);
+      border-color: rgba(229, 231, 235, 0.38);
+    }
+
+    .input-dark {
+      background: rgba(17, 24, 39, 0.82);
+      border: 1px solid rgba(156, 163, 175, 0.35);
+      color: #e5e7eb;
+    }
+
+    .input-dark::placeholder {
+      color: #9ca3af;
+    }
+
+    .input-dark:focus {
+      outline: none;
+      border-color: rgba(209, 213, 219, 0.7);
+      box-shadow: 0 0 0 3px rgba(209, 213, 219, 0.12);
+    }
+
+    .section-title {
+      display: inline-block;
+      border-bottom: 4px solid rgba(156, 163, 175, 0.75);
+      padding-bottom: 8px;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.55s ease both;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      } to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result-positive {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.14), rgba(17, 24, 39, 0.86));
+      border: 1px solid rgba(74, 222, 128, 0.24);
+    }
+
+    .result-negative {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.14), rgba(17, 24, 39, 0.86));
+      border: 1px solid rgba(248, 113, 113, 0.24);
+    }
+
+    .result-neutral {
+      background: linear-gradient(135deg, rgba(234, 179, 8, 0.14), rgba(17, 24, 39, 0.86));
+      border: 1px solid rgba(250, 204, 21, 0.24);
+    }
+
+    .step-number {
+      background: linear-gradient(135deg, #6b7280, #d1d5db);
+      color: #111827;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+    }
+
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 2.35rem;
+        line-height: 1.1;
+      }
+    }
+    </style>
+</head>
+
+<body class="text-gray-300">
+
+    <!-- NAVBAR -->
+  <nav class="fixed top-0 w-full z-50 bg-[#111827]/82 backdrop-blur-md border-b border-gray-500/20 shadow-sm">
+    <div class="container mx-auto px-5 py-1 lg:py-2 flex justify-between items-center relative">
+      <a href="#home" class="flex items-center space-x-2 z-50 py-1">
+        <div class="w-9 h-9 lg:w-10 lg:h-10 rounded-xl overflow-hidden shadow-lg flex items-center justify-center">
+          <img src="./media/icon.png" alt="Logo SentiLyze" class="w-full h-full object-cover">
+        </div>
+
+        <span class="font-extrabold text-xl md:text-3xl tracking-tight text-gray-100">
+          Senti<span class="text-gray-400">Lyze</span>
+        </span>
+      </a>
+
+      <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 space-x-10 text-sm font-medium">
+        <a href="#home" class="flex items-center gap-2 hover:text-gray-100 transition-colors font-bold">
+          <i class="fas fa-house"></i>Beranda
+        </a>
+
+        <a href="#prediksi" class="flex items-center gap-2 hover:text-gray-100 transition-colors font-bold">
+          <i class="fas fa-wand-magic-sparkles"></i>Prediksi
+        </a>
+
+        <a href="#tentang" class="flex items-center gap-2 hover:text-gray-100 transition-colors font-bold">
+          <i class="fas fa-circle-info"></i>Tentang
+        </a>
+
+        <a href="#tim" class="flex items-center gap-2 hover:text-gray-100 transition-colors font-bold">
+          <i class="fas fa-users"></i>Tim
+        </a>
+      </div>
+
+      <div class="hidden md:block w-8"></div>
+
+      <button id="menuBtn" class="md:hidden text-gray-200 focus:outline-none z-50 relative p-2" type="button" aria-label="Buka menu">
+        <i class="fas fa-bars text-xl transition-all duration-300" id="menuIcon"></i>
+      </button>
+    </div>
+  </nav>
+
+    <!-- MOBILE BACKDROP -->
+    <div id="mobileBackdrop" class="fixed inset-0 bg-black/55 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300">
+    </div>
+
+    <!-- MOBILE MENU -->
+    <div id="mobileMenu" class="fixed top-16 right-5 w-52 bg-[#1f2937]/95 backdrop-blur-xl border border-gray-400/20 rounded-2xl z-50 hidden flex-col py-2 shadow-2xl opacity-0 transition-all duration-300 scale-95 origin-top-right">
+      <a href="#home" class="mobile-link flex items-center gap-3 w-full text-left text-base font-medium text-gray-200 hover:text-white hover:bg-gray-600/30 py-2.5 px-5 border-b border-gray-500/20 transition-all">
+        <i class="fas fa-house w-5"></i>Beranda
+      </a>
+
+      <a href="#prediksi" class="mobile-link flex items-center gap-3 w-full text-left text-base font-medium text-gray-200 hover:text-white hover:bg-gray-600/30 py-2.5 px-5 border-b border-gray-500/20 transition-all">
+        <i class="fas fa-wand-magic-sparkles w-5"></i>Prediksi
+      </a>
+
+      <a href="#tentang" class="mobile-link flex items-center gap-3 w-full text-left text-base font-medium text-gray-200 hover:text-white hover:bg-gray-600/30 py-2.5 px-5 border-b border-gray-500/20 transition-all">
+        <i class="fas fa-circle-info w-5"></i>Tentang
+      </a>
+
+      <a href="#tim" class="mobile-link flex items-center gap-3 w-full text-left text-base font-medium text-gray-200 hover:text-white hover:bg-gray-600/30 py-2.5 px-5 transition-all">
+        <i class="fas fa-users w-5"></i>Tim
+      </a>
+    </div>
+
+    <!-- HERO -->
+    <section id="home" class="pt-32 md:pt-38 pb-32 md:pb-32 px-5">
+      <div class="container mx-auto max-w-5xl text-center fade-in">
+        <div class="inline-block px-4 py-1.5 rounded-full bg-gray-300/10 text-gray-300 text-sm font-semibold mb-5 backdrop-blur-sm border border-gray-300/15">
+          <i class="fas fa-robot mr-1"></i>NLP Project • Kelompok 2
+        </div>
+        <h1 class="hero-title text-4xl md:text-7xl font-extrabold bg-gradient-to-r from-gray-300 via-gray-100 to-gray-400 bg-clip-text text-transparent leading-tight mb-">
+          Analisis Sentimen Kesiapan Mental Siswa Menghadapi UTBK
+        </h1>
+        <p class="tagline text-gray-300 text-lg md:text-xl mt-6 max-w-2xl mx-auto"> "Setiap kata punya rasa, setiap komentar punya makna."</p>
+        <div class="mt-9 flex flex-wrap justify-center gap-4">
+          <a href="#prediksi" class="btn-primary px-7 py-3 rounded-full font-semibold shadow-xl flex items-center gap-2"><i class="fas fa-wand-magic-sparkles"></i>Prediksi Sekarang</a>
+          <a href="#tentang" class="btn-secondary px-7 py-3 rounded-full font-semibold">Pelajari Sistem</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- PREDIKSI -->
+    <section id="prediksi" class="py-16 md:py-20 px-5 bg-black/10 backdrop-blur-sm border-t border-gray-500/20">
+      <div class="container mx-auto max-w-4xl">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold section-title text-gray-100">Prediksi Sentimen</h2>
+          <p class="text-gray-400 mt-4 max-w-2xl mx-auto">Masukkan komentar terkait UTBK/SNBT, lalu sistem akan menampilkan hasil sentimennya.</p>
+        </div>
+        <div class="glass-card rounded-2xl p-6 md:p-8 shadow-xl">
+          <form id="predictionForm" class="space-y-5">
+            <div>
+              <label class="block text-sm font-medium text-gray-200 mb-2"><i class="fas fa-comment-dots mr-1"></i>Komentar Siswa</label>
+              <textarea id="commentInput" name="comment" rows="6" required class="input-dark w-full p-4 rounded-xl resize-none transition text-sm md:text-base" placeholder="Contoh: Aku takut banget gagal UTBK tahun ini, skor tryout masih rendah..."></textarea>
+            </div>
+
+            <div>
+              <p class="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest text-center lg:text-left">
+                Contoh Cepat
+              </p>
+
+              <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+                <!-- Badge contoh cepat -->
+                <div class="flex flex-wrap justify-center lg:justify-start gap-3">
+                  <button type="button" onclick="setExample('Aku takut banget gagal UTBK tahun ini, skor tryout masih rendah')" class="px-4 py-2 text-xs rounded-full bg-red-500/10 text-red-200 border border-red-400/20 hover:bg-red-500/20 transition">
+                    <i class="fa-solid fa-face-frown mr-1"></i>
+                    Negatif
+                  </button>
+
+                  <button type="button" onclick="setExample('Semangat pejuang UTBK, semoga kita semua lolos PTN impian')" class="px-4 py-2 text-xs rounded-full bg-green-500/10 text-green-200 border border-green-400/20 hover:bg-green-500/20 transition">
+                    <i class="fa-solid fa-face-smile mr-1"></i>
+                    Positif
+                  </button>
+
+                  <button type="button" onclick="setExample('Kapan jadwal pendaftaran SNBT dibuka?')" class="px-4 py-2 text-xs rounded-full bg-yellow-500/10 text-yellow-100 border border-yellow-400/20 hover:bg-yellow-500/20 transition">
+                    <i class="fa-solid fa-circle-info mr-1"></i>
+                    Netral
+                  </button>
+                </div>
+
+                <!-- Button prediksi -->
+                <div class="flex justify-center lg:justify-end">
+                  <button type="submit" id="submitBtn" class="btn-primary w-auto px-8 py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2">
+                    <i class="fas fa-search"></i>
+                    Prediksi Sentimen
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </form>
+
+          <p id="modelStatus" class="mt-5 text-xs text-gray-500 text-center lg:text-right">
+            Memuat model TensorFlow.js...
+          </p>
+
+          <div id="hasil" class="hidden mt-10 border-t border-gray-500/20 pt-8 fade-in">
+            <div class="mb-6">
+              <h3 class="text-2xl font-semibold text-gray-100 flex items-center gap-2">
+                <i class="fas fa-square-poll-vertical text-gray-300"></i>
+                Hasil Analisis
+              </h3>
+
+              <p class="text-sm text-gray-400 mt-1">
+                Berikut hasil prediksi dari model berdasarkan komentar yang dimasukkan.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+              <div id="sentimentCard" class="result-neutral rounded-2xl p-5">
+                <div id="sentimentIconBox" class="w-12 h-12 rounded-xl bg-yellow-400/15 flex items-center justify-center mb-4">
+                  <i id="sentimentIcon" class="fa-solid fa-circle-info text-yellow-300 text-xl"></i>
+                </div>
+
+                <p id="sentimentBadge" class="text-sm text-yellow-100 font-bold uppercase tracking-wider">Prediksi Sentimen</p>
+                <p id="resultLabel" class="text-4xl md:text-5xl font-black text-yellow-300 mt-2">Netral</p>
+                <p id="resultDescription" class="text-sm text-gray-300 mt-3 leading-relaxed">Komentar bersifat informatif atau tidak menunjukkan emosi yang kuat.</p>
+              </div>
+
+              <div class="soft-card rounded-2xl p-5">
+                <div class="w-12 h-12 rounded-xl bg-gray-300/10 flex items-center justify-center mb-4">
+                  <i class="fa-solid fa-gauge-high text-gray-200 text-xl"></i>
+                </div>
+
+                <p class="text-sm text-gray-400 font-bold uppercase tracking-wider">Confidence Model</p>
+                <p id="resultConfidence" class="text-4xl md:text-5xl font-black text-gray-100 mt-2">0%</p>
+
+                <div class="w-full bg-gray-800 rounded-full h-3 mt-5 overflow-hidden">
+                  <div id="confidenceBar" class="bg-gradient-to-r from-gray-500 to-gray-300 h-3 rounded-full" style="width: 0%;"></div>
+                </div>
+
+                <p class="text-xs text-gray-500 mt-3">
+                  Semakin tinggi nilainya, semakin yakin model terhadap hasil prediksi.
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="soft-card rounded-2xl p-5">
+                <p class="text-sm font-extrabold text-gray-200 mb-3 uppercase tracking-wider">
+                  Komentar Asli
+                </p>
+
+                <p id="resultOriginal" class="text-gray-300 leading-relaxed text-sm md:text-base"></p>
+              </div>
+
+              <div class="soft-card rounded-2xl p-5">
+                <p class="text-sm font-extrabold text-gray-200 mb-3 uppercase tracking-wider">
+                  Hasil Preprocessing
+                </p>
+
+                <p id="resultClean" class="text-gray-300 leading-relaxed text-sm md:text-base"></p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- TENTANG -->
+    <section id="tentang" class="py-20 px-5 border-t border-gray-500/20">
+      <div class="container mx-auto max-w-6xl">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold section-title text-gray-100">Tentang Sistem</h2>
+          <p class="text-gray-400 mt-4 max-w-3xl mx-auto leading-relaxed">SentiLyze merupakan sistem analisis sentimen berbasis Natural Language Processing yang dirancang untuk membantu memahami kecenderungan emosi siswa dalam menghadapi UTBK/SNBT. Sistem ini menerima komentar siswa, melakukan pemrosesan teks, lalu memprediksi apakah komentar tersebut termasuk sentimen positif, negatif, atau netral.
+          </p>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-6 mb-10">
+          <div class="about-card rounded-2xl p-6">
+            <div class="w-12 h-12 rounded-xl bg-gray-300/10 border border-gray-300/15 flex items-center justify-center mb-4">
+              <i class="fa-solid fa-microchip text-gray-200 text-xl"></i>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-100 mb-2">Metode Sistem</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Sistem menggunakan model Long Short-Term Memory untuk mengenali pola teks dan mengklasifikasikan komentar ke dalam kelas sentimen.</p>
+          </div>
+
+          <div class="about-card rounded-2xl p-6">
+            <div class="w-12 h-12 rounded-xl bg-gray-300/10 border border-gray-300/15 flex items-center justify-center mb-4">
+              <i class="fa-solid fa-layer-group text-gray-200 text-xl"></i>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-100 mb-2">Kelas Sentimen</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Hasil prediksi dibagi menjadi tiga kategori, yaitu positif, negatif, dan netral, sesuai kecenderungan makna dari komentar yang dimasukkan.
+            </p>
+          </div>
+
+          <div class="about-card rounded-2xl p-6">
+            <div class="w-12 h-12 rounded-xl bg-gray-300/10 border border-gray-300/15 flex items-center justify-center mb-4">
+              <i class="fa-solid fa-gears text-gray-200 text-xl"></i>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-100 mb-2">Proses Analisis</h3>
+            <p class="text-gray-400 text-sm leading-relaxed">Komentar akan melalui tahap preprocessing, tokenisasi, padding, prediksi model, lalu hasil akhirnya ditampilkan bersama nilai confidence.
+            </p>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 md:p-8">
+          <div class="grid lg:grid-cols-3 gap-6 lg:gap-10 items-start">
+            <div>
+              <p class="text-gray-400 text-sm font-bold uppercase tracking-[0.2em] mb-3">Prediction Flow</p>
+              <h3 class="text-2xl md:text-3xl font-extrabold text-gray-100 mb-4">Alur Kerja Prediksi</h3>
+              <p class="text-gray-400 leading-relaxed text-sm md:text-base">Alur sistem dibuat sederhana agar pengguna hanya perlu memasukkan komentar.Setelah itu, sistem akan menjalankan proses analisis secara otomatis hingga menghasilkan label sentimen dan tingkat keyakinan model.
+              </p>
+            </div>
+
+            <div class="lg:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div class="space-y-4">
+                <div class="flex gap-4 about-card rounded-xl p-4">
+                  <div class="step-number w-9 h-9 rounded-full flex items-center justify-center text-sm font-black shrink-0">1</div>
+                  <div>
+                    <h4 class="font-bold text-gray-100">Input Komentar</h4>
+                    <p class="text-sm text-gray-400 mt-1">
+                      Pengguna memasukkan komentar siswa terkait UTBK atau SNBT.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex gap-4 about-card rounded-xl p-4">
+                  <div class="step-number w-9 h-9 rounded-full flex items-center justify-center text-sm font-black shrink-0">2</div>
+                  <div>
+                    <h4 class="font-bold text-gray-100">Preprocessing Teks</h4>
+                    <p class="text-sm text-gray-400 mt-1">
+                      Teks dibersihkan agar lebih siap diproses oleh model.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div class="flex gap-4 about-card rounded-xl p-4">
+                  <div class="step-number w-9 h-9 rounded-full flex items-center justify-center text-sm font-black shrink-0">3
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-gray-100">Tokenisasi dan Padding</h4>
+                    <p class="text-sm text-gray-400 mt-1">
+                      Komentar diubah menjadi bentuk numerik dengan panjang yang sama.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex gap-4 about-card rounded-xl p-4">
+                  <div class="step-number w-9 h-9 rounded-full flex items-center justify-center text-sm font-black shrink-0">4</div>
+
+                  <div>
+                    <h4 class="font-bold text-gray-100">Prediksi Sentimen</h4>
+                    <p class="text-sm text-gray-400 mt-1">
+                      Model LSTM menghasilkan label sentimen beserta nilai confidence.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TIM -->
+    <section id="tim" class="py-16 px-5 bg-black/20 backdrop-blur-sm border-t border-gray-500/20">
+      <div class="container mx-auto max-w-6xl">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold section-title text-gray-100">Tim Pengembang</h2>
+          <p class="text-gray-400 mt-3 text-sm">Dibalik layar pembuatan sistem analisis sentimen SentiLyze.</p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6">
+          <div class="team-card rounded-xl p-5 text-center">
+            <div class="w-20 h-20 lg:w-28 lg:h-28 mx-auto rounded-full bg-gray-300/10 border-2 border-gray-300/25 mb-3 flex items-center justify-center">
+              <span class="text-2xl lg:text-4xl font-black text-gray-200">AG</span>
+            </div>
+            <h3 class="font-bold text-gray-100 text-sm lg:text-lg">Aqshal Fatih Ardhani</h3>
+            <p class="text-xs lg:text-sm text-gray-400 mb-2">NIM. 2403112762</p>
+          </div>
+
+          <div class="team-card rounded-xl p-5 text-center">
+            <div class="w-20 h-20 lg:w-28 lg:h-28 mx-auto rounded-full bg-gray-300/10 border-2 border-gray-300/25 mb-3 flex items-center justify-center">
+              <span class="text-2xl lg:text-4xl font-black text-gray-200">AZ</span>
+            </div>
+            <h3 class="font-bold text-gray-100 text-sm lg:text-lg">Mhd. Irsal</h3>
+            <p class="text-xs lg:text-sm text-gray-400 mb-2">NIM. 2403114255</p>
+          </div>
+
+          <div class="team-card rounded-xl p-5 text-center">
+            <div class="w-20 h-20 lg:w-28 lg:h-28 mx-auto rounded-full bg-gray-300/10 border-2 border-gray-300/25 mb-3 flex items-center justify-center">
+              <span class="text-2xl lg:text-4xl font-black text-gray-200">AF</span>
+            </div>
+            <h3 class="font-bold text-gray-100 text-sm lg:text-lg">Natasya Nur</h3>
+            <p class="text-xs lg:text-sm text-gray-400 mb-2">NIM. 2403111675</p>
+          </div>
+
+          <div class="team-card rounded-xl p-5 text-center">
+            <div class="w-20 h-20 lg:w-28 lg:h-28 mx-auto rounded-full bg-gray-300/10 border-2 border-gray-300/25 mb-3 flex items-center justify-center">
+              <span class="text-2xl lg:text-4xl font-black text-gray-200">DB</span>
+            </div>
+            <h3 class="font-bold text-gray-100 text-sm lg:text-lg">Rizki Bayu Miftah</h3>
+            <p class="text-xs lg:text-sm text-gray-400 mb-2">NIM. 2403135353</p>
+          </div>
+
+          <div class="team-card rounded-xl p-5 text-center">
+            <div class="w-20 h-20 lg:w-28 lg:h-28 mx-auto rounded-full bg-gray-300/10 border-2 border-gray-300/25 mb-3 flex items-center justify-center">
+              <span class="text-2xl lg:text-4xl font-black text-gray-200">ZK</span>
+            </div>
+            <h3 class="font-bold text-gray-100 text-sm lg:text-lg">Zahra Khairani Zamziah</h3>
+            <p class="text-xs lg:text-sm text-gray-400 mb-2">NIM. 2403126646</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="relative bg-[#0b1120] border-t border-gray-500/20 pt-12 pb-8 px-5 overflow-hidden">
+      <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-gray-400/8 blur-[120px] rounded-full"></div>
+
+      <div class="container mx-auto max-w-6xl relative z-10">
+        <div class="grid md:grid-cols-3 gap-10 mb-10">
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-brain text-gray-300 text-2xl"></i>
+              <span class="font-bold text-xl text-gray-100">SentiLyze</span>
+            </div>
+            <p class="text-gray-400 text-sm leading-relaxed">Sistem analisis sentimen berbasis NLP untuk membantu memahami kecenderungan emosi siswa dalam menghadapi UTBK/SNBT.</p>
+          </div>
+
+          <div>
+            <h3 class="text-gray-100 font-semibold mb-4 flex items-center gap-2">
+              <i class="fas fa-compass text-gray-300"></i>Navigasi
+            </h3>
+
+            <div class="flex flex-col gap-2 text-sm text-gray-400">
+              <a href="#home" class="hover:text-gray-200 transition">Beranda</a>
+              <a href="#prediksi" class="hover:text-gray-200 transition">Prediksi</a>
+              <a href="#tentang" class="hover:text-gray-200 transition">Tentang</a>
+              <a href="#tim" class="hover:text-gray-200 transition">Tim</a>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-gray-100 font-semibold mb-4 flex items-center gap-2">
+              <i class="fas fa-gears text-gray-300"></i>
+              Sistem
+            </h3>
+
+            <div class="text-sm text-gray-400 space-y-2">
+              <p><i class="fas fa-check text-green-400 mr-2"></i> Text Preprocessing</p>
+              <p><i class="fas fa-check text-green-400 mr-2"></i> Tokenization & Padding</p>
+              <p><i class="fas fa-check text-green-400 mr-2"></i> LSTM Classification</p>
+              <p><i class="fas fa-check text-green-400 mr-2"></i> Sentiment Prediction</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-500/20 pt-6 flex flex-col md:flex-row justify-between items-center gap-3">
+          <p class="text-gray-500 text-xs">© 2026 SentiLyze • Dibuat oleh Kelompok 2</p>
+          <p class="text-gray-600 text-xs flex items-center gap-2">
+            <i class="fas fa-code text-gray-400"></i>
+            TensorFlow.js • Tailwind • NLP • LSTM
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script>
+      function setExample(text) {
+        const input = document.getElementById("commentInput");
+        input.value = text;
+        input.focus();
+      }
+
+      const predictionForm = document.getElementById("predictionForm");
+      const submitBtn = document.getElementById("submitBtn");
+
+      if (predictionForm && submitBtn) {
+        predictionForm.addEventListener("submit", function () {
+          submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses prediksi...';
+          submitBtn.classList.add("opacity-80", "cursor-not-allowed");
+        });
+      }
+
+      // Membersihkan URL setelah hasil prediksi tampil.
+      // Setelah refresh, hasil analisis lama tidak akan muncul lagi
+      // jika route Flask sudah memakai redirect + session pop.
+      if (window.location.search.includes("show_result=1")) {
+        const cleanUrl = window.location.origin + window.location.pathname + "#hasil";
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+
+      const menuBtn = document.getElementById("menuBtn");
+      const menuIcon = document.getElementById("menuIcon");
+      const mobileMenu = document.getElementById("mobileMenu");
+      const mobileBackdrop = document.getElementById("mobileBackdrop");
+      const mobileLinks = document.querySelectorAll(".mobile-link");
+
+      function toggleMenu() {
+        const isHidden = mobileMenu.classList.contains("hidden");
+
+        if (isHidden) {
+          mobileBackdrop.classList.remove("hidden");
+          mobileMenu.classList.remove("hidden");
+
+          setTimeout(() => {
+            mobileBackdrop.classList.remove("opacity-0");
+            mobileMenu.classList.remove("opacity-0", "scale-95");
+            menuIcon.classList.remove("fa-bars");
+            menuIcon.classList.add("fa-times", "rotate-90");
+          }, 10);
+        } else {
+          mobileBackdrop.classList.add("opacity-0");
+          mobileMenu.classList.add("opacity-0", "scale-95");
+          menuIcon.classList.remove("fa-times", "rotate-90");
+          menuIcon.classList.add("fa-bars");
+
+          setTimeout(() => {
+            mobileBackdrop.classList.add("hidden");
+            mobileMenu.classList.add("hidden");
+          }, 300);
+        }
+      }
+
+      if (menuBtn) {
+        menuBtn.addEventListener("click", toggleMenu);
+      }
+
+      if (mobileBackdrop) {
+        mobileBackdrop.addEventListener("click", toggleMenu);
+      }
+
+      mobileLinks.forEach((link) => {
+        link.addEventListener("click", toggleMenu);
+      });
+    </script>
+    <script src="./js/SentiLyze_tfjs.js"></script>
+</body>
+</html>
