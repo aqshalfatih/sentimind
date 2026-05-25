@@ -1,6 +1,7 @@
 let sentimindConfig = null;
 let sentimindWeights = null;
 let sentimindReady = false;
+let sentimindLoadPromise = null;
 
 const statusEl = () => document.getElementById("modelStatus");
 const submitBtnEl = () => document.getElementById("submitBtn");
@@ -28,41 +29,71 @@ async function loadTensor(path, shape) {
 }
 
 async function loadSentimindModel() {
-  const button = submitBtnEl();
-  if (button) {
-    button.disabled = true;
-    button.classList.add("opacity-70", "cursor-not-allowed");
-  }
+  if (sentimindReady) return true;
+  if (sentimindLoadPromise) return sentimindLoadPromise;
 
-  try {
-    setModelStatus("Memuat TensorFlow.js dan model LSTM...");
-    await tf.ready();
-
-    sentimindConfig = await fetchJson("./model/tokenizer_config.json");
-    const manifest = sentimindConfig.weights;
-
-    sentimindWeights = {
-      embedding: await loadTensor(`./model/${manifest.embedding.path}`, manifest.embedding.shape),
-      lstmKernel: await loadTensor(`./model/${manifest.lstm_kernel.path}`, manifest.lstm_kernel.shape),
-      lstmRecurrentKernel: await loadTensor(`./model/${manifest.lstm_recurrent_kernel.path}`, manifest.lstm_recurrent_kernel.shape),
-      lstmBias: await loadTensor(`./model/${manifest.lstm_bias.path}`, manifest.lstm_bias.shape),
-      denseKernel: await loadTensor(`./model/${manifest.dense_kernel.path}`, manifest.dense_kernel.shape),
-      denseBias: await loadTensor(`./model/${manifest.dense_bias.path}`, manifest.dense_bias.shape),
-      outputKernel: await loadTensor(`./model/${manifest.output_kernel.path}`, manifest.output_kernel.shape),
-      outputBias: await loadTensor(`./model/${manifest.output_bias.path}`, manifest.output_bias.shape),
-    };
-
-    sentimindReady = true;
+  sentimindLoadPromise = (async () => {
+    const button = submitBtnEl();
     if (button) {
-      button.disabled = false;
-      button.classList.remove("opacity-70", "cursor-not-allowed");
-      button.innerHTML = '<i class="fas fa-search"></i> Prediksi Sentimen';
+      button.disabled = true;
+      button.classList.add("opacity-70", "cursor-not-allowed");
+      button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyiapkan model...';
     }
-    setModelStatus("Model siap digunakan di browser tanpa backend Flask.");
-  } catch (error) {
-    console.error(error);
-    setModelStatus("Model gagal dimuat. Jalankan melalui Live Server/Vercel, bukan dibuka langsung dari file explorer.", true);
-  }
+
+    try {
+      setModelStatus("Menyiapkan TensorFlow.js...");
+      try {
+        await tf.setBackend("webgl");
+      } catch (backendError) {
+        console.warn("WebGL tidak tersedia, memakai backend default.", backendError);
+      }
+      await tf.ready();
+
+      setModelStatus("Memuat konfigurasi tokenizer...");
+      sentimindConfig = await fetchJson("./model/tokenizer_config.json");
+      const manifest = sentimindConfig.weights;
+
+      const weightList = [
+        ["embedding", "embedding"],
+        ["lstmKernel", "lstm_kernel"],
+        ["lstmRecurrentKernel", "lstm_recurrent_kernel"],
+        ["lstmBias", "lstm_bias"],
+        ["denseKernel", "dense_kernel"],
+        ["denseBias", "dense_bias"],
+        ["outputKernel", "output_kernel"],
+        ["outputBias", "output_bias"],
+      ];
+
+      let loaded = 0;
+      const loadedWeights = await Promise.all(
+        weightList.map(async ([alias, key]) => {
+          const item = manifest[key];
+          const tensor = await loadTensor(`./model/${item.path}`, item.shape);
+          loaded += 1;
+          setModelStatus(`Memuat bobot model... ${loaded}/${weightList.length}`);
+          return [alias, tensor];
+        })
+      );
+
+      sentimindWeights = Object.fromEntries(loadedWeights);
+      sentimindReady = true;
+
+      if (button) {
+        button.disabled = false;
+        button.classList.remove("opacity-70", "cursor-not-allowed");
+        button.innerHTML = '<i class="fas fa-search"></i> Prediksi Sentimen';
+      }
+      setModelStatus("Model siap digunakan. Prediksi berjalan langsung di browser.");
+      return true;
+    } catch (error) {
+      console.error(error);
+      sentimindLoadPromise = null;
+      setModelStatus("Model gagal dimuat. Jalankan melalui Live Server/Vercel, bukan dibuka langsung dari file explorer.", true);
+      return false;
+    }
+  })();
+
+  return sentimindLoadPromise;
 }
 
 function normalizeWords(text) {
@@ -251,7 +282,7 @@ function renderResult(comment, result) {
   const original = document.getElementById("resultOriginal");
   const clean = document.getElementById("resultClean");
 
-  const view = {
+  const views = {
     positif: {
       card: "result-positive rounded-2xl p-5",
       iconBox: "w-12 h-12 rounded-xl bg-green-400/15 flex items-center justify-center mb-4",
@@ -279,7 +310,9 @@ function renderResult(comment, result) {
       title: "Netral",
       description: "Komentar bersifat informatif atau tidak menunjukkan emosi yang kuat."
     }
-  }[result.label] || view.netral;
+  };
+
+  const view = views[result.label] || views.netral;
 
   card.className = view.card;
   iconBox.className = view.iconBox;
@@ -311,8 +344,17 @@ function setupPredictionForm() {
     if (!comment) return;
 
     if (!sentimindReady) {
-      setModelStatus("Model masih dimuat. Coba lagi setelah status model siap.", true);
-      return;
+      button.disabled = true;
+      button.classList.add("opacity-80", "cursor-not-allowed");
+      button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memuat model...';
+
+      const loaded = await loadSentimindModel();
+      if (!loaded) {
+        button.disabled = false;
+        button.classList.remove("opacity-80", "cursor-not-allowed");
+        button.innerHTML = '<i class="fas fa-search"></i> Prediksi Sentimen';
+        return;
+      }
     }
 
     button.disabled = true;
@@ -336,5 +378,12 @@ function setupPredictionForm() {
 
 document.addEventListener("DOMContentLoaded", () => {
   setupPredictionForm();
-  loadSentimindModel();
+  setModelStatus("Halaman siap. Model dimuat otomatis di background...");
+
+  const startLoading = () => loadSentimindModel();
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(startLoading, { timeout: 1200 });
+  } else {
+    setTimeout(startLoading, 500);
+  }
 });
